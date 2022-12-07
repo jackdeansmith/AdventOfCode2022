@@ -91,12 +91,4 @@ fun MutableList<MutableList<Char>>.apply2(instruction: Instruction) {
     }
 
     this[instruction.toIndex-1].addAll(lifted.reversed())
-
-    // val lifted = this[instruction.fromIndex-1].reversed().slice(0..instruction.number-1)
-    // this[instruction.toIndex-1].addAll(lifted.reversed())
-    // println("lifted: $lifted")
-
-    // repeat(instruction.number) {
-    //     this.move(instruction.fromIndex, instruction.toIndex)
-    // }
 }
