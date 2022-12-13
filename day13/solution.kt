@@ -2,27 +2,42 @@ import java.io.File
 import kotlin.io.println
 import kotlin.math.abs
 
-sealed class PacketPart {
+sealed class PacketPart: Comparable<PacketPart> {
     data class IntPart(val number: Int) : PacketPart()
     data class ListPart(val list: List<PacketPart>) : PacketPart()
+
+    override fun compareTo(other: PacketPart): Int { 
+        return isBefore(this, other)
+    }
 }
-
-
 
 fun main(args: Array<String>) {
     val lines = File(args[0]).readLines()
 
-    val ans1 = parseProblem(lines)
-                .withIndex()
-                .filter {(_, packetpair) -> isBefore(packetpair.first, packetpair.second) == -1}
-                .map {(idx, _) -> idx + 1}
-                .sum()
-    println(ans1)
+    // val ans1 = parseProblem(lines)
+    //             .withIndex()
+    //             .filter {(_, packetpair) -> isBefore(packetpair.first, packetpair.second) == -1}
+    //             .map {(idx, _) -> idx + 1}
+    //             .sum()
+    // println(ans1)
 
-    val ans2 = parseProblemPartTwo(lines + "[[2]]\n[[6]]")
-    println(ans2)
+    var lines2 = lines.toMutableList()
+    lines2.add("")
+    lines2.add("[[2]]")
+    lines2.add("[[6]]")
 
+    val sortedPackets = parseProblemPartTwo(lines2)
+               .sorted()
 
+    val idxDivider1 = sortedPackets.withIndex().find { (_, packet) -> 
+        val res = isBefore(packet, parsePacket("[[2]]"))
+        res == 0
+    }!!.index + 1
+    val idxDivider2 = sortedPackets.withIndex().find { (_, packet) -> 
+        val res = isBefore(packet, parsePacket("[[6]]"))
+        res == 0
+    }!!.index + 1
+    println(idxDivider1 * idxDivider2)
 }
 
 fun isBefore(first: PacketPart, second: PacketPart): Int {
@@ -95,7 +110,7 @@ fun parseList(input: String): Pair<PacketPart, String> {
     var line = input.slice(1..input.length-1) // remove leading [
     var parts = mutableListOf<PacketPart>()
 
-    while(true) {
+    while(line.length > 0) {
         when(line[0]) {
             ']' -> {
                 line = line.slice(1..line.length-1)
