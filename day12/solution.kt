@@ -9,10 +9,49 @@ fun main(args: Array<String>) {
     val lines = File(args[0]).readLines()
     val map = parse(lines)
 
-    // println(map)
-
     printLenShortestPath(map)
+    printLenShortestStartFromAnyA(map)
+}
 
+fun printLenShortestStartFromAnyA(map: List<List<Char>>) {
+
+    val compareByMinDist: Comparator<Pair<Int, Position>> = compareBy { it.first }
+    var unvisited = PriorityQueue<Pair<Int, Position>>(compareByMinDist)
+    var minDistances: MutableMap<Position, Int> = mutableMapOf()
+
+    for(rowIdx in 0..map.size-1) {
+        for(colIdx in 0..map[0].size-1) {
+            val position = Pair(rowIdx, colIdx)
+            if(map[rowIdx][colIdx] in setOf('S','a')){
+                unvisited.add(Pair(0, position))
+                minDistances[position] = 0
+            } else {
+                unvisited.add(Pair(Int.MAX_VALUE, position))
+                minDistances[position] = Int.MAX_VALUE
+            }
+        }    
+    }
+
+    while(unvisited.peek() != null) {
+        var (minDistance, position) = unvisited.poll()
+
+        if(map[position.first][position.second] == 'E'){
+            println("Min distance to end from any a: $minDistance")
+            break
+        }
+
+        val neighbors = neighbors(map, position)
+
+        for (neighbor in neighbors) { 
+            val newMinDistance = minDistance + 1
+
+            if(minDistances[neighbor]!! > newMinDistance) {
+                unvisited.remove(Pair(minDistances[neighbor], neighbor))
+                minDistances[neighbor] = newMinDistance
+                unvisited.add(Pair(minDistances[neighbor]!!, neighbor))
+            }
+        }
+    }
 }
 
 fun printLenShortestPath(map: List<List<Char>>) {
