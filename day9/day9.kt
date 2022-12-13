@@ -18,15 +18,6 @@ fun main(args: Array<String>) {
     println("pt2: $ans2")
 }
 
-// fun printRopeState(rope: List<Position>) {
-//     // start of rope is head, end of rope is tail
-
-//     for((idx, pos) in rope.withIndex().reversed()){
-//         print(idx)
-//     }
-
-// }
-
 fun allTailVisitedPositionsPt2(instructions: List<Pair<Direction, Int>>): List<Position> {
 
     // start of rope is head, end of rope is tail
