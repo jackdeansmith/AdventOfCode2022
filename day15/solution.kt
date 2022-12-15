@@ -6,9 +6,11 @@ fun main(args: Array<String>) {
     val lines = File(args[0]).readLines()
                              .map {parseLine(it)}
 
-    println("Part 1: ${part1(2000000, lines)}")
+    // println("Part 1: ${part1(2000000, lines)}")
     
-    println("Part 2:")
+    val (x, y) = part2(4000000, lines)
+
+    println("Part 2: $x, $y")
 
     // println(coverageForRow(10, Pair(Pair(8, 7), Pair(2, 10))))
 }
@@ -36,32 +38,51 @@ fun part1(row: Int, input: List<Pair<Pair<Int, Int>, Pair<Int, Int>>>): Int {
     return result.size
 }
 
-fun part2(bound: Int, input: List<Pair<Pair<Int, Int>, Pair<Int, Int>>>): Pair<Int, Int> {
+fun part2(bounds: Int, input: List<Pair<Pair<Int, Int>, Pair<Int, Int>>>): Pair<Int, Int> {
 
-    var bestYForEachX: MutableList<Int> = mutableListOf()
-    repeat(bound)
-        bestYForEachX.add(0)
-    }
-
-    while(true) {
-        var nextBestYForEachX = bestYForEachX.toMutableList()
-        for(x in range 0..bound){
-
-        }
-
-        if(nextBestYForEachX == bestYForEachX){
-            break
+    var iter = 0
+    for(obs in input) {
+        println("Iter: $iter")
+        iter += 1
+        val candidate = positionsOneOutsideCoveredArea(obs).toList()
+                   .filter { it.first <= bounds && it.first >= 0 && it.second >= 0 && it.second <= bounds }
+                   .find { !isCovered(input, it)}
+        if(candidate != null){
+            return candidate
         }
     }
-
-    print("terminated")
-
     return Pair(0,0)
 }
 
-fun tilt(point: Pair<Int, Int>): Pair<Int, Int> {
-    val (x, y) = point
-    return Pair(x + y, x - y)
+fun isCovered(input: List<Pair<Pair<Int, Int>, Pair<Int, Int>>>, position: Pair<Int, Int>): Boolean {
+    for (observation in input) {
+        val (sensorPos, beaconPos) = observation
+        val sensorDist = manhattanDistance(sensorPos, beaconPos)
+        val trialDist = manhattanDistance(sensorPos, position)
+        if(trialDist <= sensorDist) {
+            return true
+        }
+    }
+    return false
+}
+
+fun positionsOneOutsideCoveredArea(observation: Pair<Pair<Int, Int>, Pair<Int, Int>>): Set<Pair<Int, Int>> {
+    val (sensorPos, beaconPos) = observation
+    val sensorDist = manhattanDistance(sensorPos, beaconPos)
+
+    var result: MutableSet<Pair<Int, Int>> = mutableSetOf()
+
+    for(y in (sensorPos.second - sensorDist - 1)..(sensorPos.second + sensorDist + 1)) {
+        val rowDelta = abs(sensorPos.second - y)
+        val shadowSize = (sensorDist - rowDelta)
+        val uncovered1 = sensorPos.first - shadowSize - 1
+        val uncovered2 = sensorPos.first + shadowSize + 1
+        // println("uncovered1: $uncovered1, uncovered2: $uncovered2")
+        result.add(Pair(uncovered1, y))
+        result.add(Pair(uncovered2, y))
+    }
+
+    return result
 }
 
 fun beaconsInRow(row: Int, observations: List<Pair<Pair<Int, Int>, Pair<Int, Int>>>): Set<Int> {
