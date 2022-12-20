@@ -18,8 +18,6 @@ fun main(args: Array<String>) {
 
     println("part1: ${surfaceArea(cubes)}")
 
-    println("boundaries: ${boundaries(cubes)}")
-
     println("part2: ${externalSurfaceArea(cubes)}")
 }
 
@@ -42,11 +40,12 @@ fun externalSurfaceArea(cubes: Set<Triple<Int, Int, Int>>): Int {
 
     var result = 0
 
-    val boundaries = boundaries(cubes)
+    // Practical volume is actually very small, can store external locations as a set, DP build the external locations by expanding
+    val extern = externalLocations(cubes)
 
     for(cube in cubes) {
         for(adjacentCube in adjacent(cube)){
-            if(isExternal(adjacentCube, cubes, boundaries)) {
+            if(extern.contains(adjacentCube)) {
                 result += 1
             }
         }
@@ -55,23 +54,37 @@ fun externalSurfaceArea(cubes: Set<Triple<Int, Int, Int>>): Int {
     return result
 }
 
-fun isExternal(location: Triple<Int, Int, Int>, dropLocations: Set<Triple<Int, Int, Int>>, boundaries: Pair<Triple<Int, Int, Int>, Triple<Int, Int, Int>>): Boolean {
-    val (x, y, z) = location
-    val (minX, minY, minZ) = boundaries.first
-    val (maxX, maxY, maxZ) = boundaries.second
+fun externalLocations(cubes: Set<Triple<Int, Int, Int>>): Set<Triple<Int, Int, Int>> {
 
-    // base case, a location is external if it's located out past a boundary 
-    if(x < minX || y < minY || z < minZ || x > maxX || y > maxY || z > maxZ) {
-        return true
+    var result: MutableSet<Triple<Int, Int, Int>> = mutableSetOf()
+    val bounds = boundaries(cubes)
+
+    val (minX, minY, minZ) = bounds.first
+    val (maxX, maxY, maxZ) = bounds.second
+
+    // terribly inefficient way of doing this, works though
+    var frontier: MutableSet<Triple<Int, Int, Int>> = mutableSetOf()
+    for(x in (minX - 1)..(maxX + 1)) {
+        for(y in (minY - 1)..(maxY + 1)) {
+            for(z in (minZ - 1)..(maxZ + 1)) {
+                if(x == minX - 1 || x == maxX + 1 || y == minY -1 || y == maxY + 1 || z == minZ - 1 || z == maxZ + 1) {
+                    frontier.add(Triple(x, y, z))
+                }
+            }
+        }
     }
 
-    // base case, a location is not external if it's part of the droplet
-    if(dropLocations.contains(location)) {
-        return false
+    while(frontier.size > 0) {
+        val newFrontier = frontier.flatMap { adjacent(it) }
+                              .filter {(x, y, z) -> !(x < minX || y < minY || z < minZ || x > maxX || y > maxY || z > maxZ)}
+                              .filter { !result.contains(it) }
+                              .filter { !cubes.contains(it) }
+                              .toMutableSet()
+        result.addAll(frontier)
+        frontier = newFrontier
     }
 
-    // else, a location is external if any of its neighbors are external
-    return adjacent(location).any {isExternal(it, dropLocations, boundaries)}
+    return result
 }
 
 fun boundaries(locations: Set<Triple<Int, Int, Int>>): Pair<Triple<Int, Int, Int>, Triple<Int, Int, Int>> {
